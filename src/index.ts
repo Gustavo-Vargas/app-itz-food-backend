@@ -33,11 +33,3 @@ const port = process.env.port || 3000;
 app.listen(port, () => {
 	console.log("App corriendo en el puerto: " + port);
 });
-
-// app.get("/", async (req: Request, res: Response) => {
-// 	res.json("Hola mundo desde Express y TypeScript, saludos!!!");
-// });
-
-// app.listen(3000, () => {
-// 	console.log("App corriendo en el puerto: 3000");
-// });
