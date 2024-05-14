@@ -1,5 +1,5 @@
 .env
 dist/
 node_modules/
-.DS_Storeecho
+.DS_Store
 src/.DS_Store
