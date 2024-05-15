@@ -10,7 +10,7 @@ const createUser = async (req: Request, res: Response) => {
 	// 3. Regresar el objeto usuario al clietne
 	try {
 		const { auth0Id } = req.body;
-		console.log(req.body);
+		
 		const existingUser = await User.findOne({ auth0Id });
 
 		if (existingUser) return res.status(200).send();
@@ -33,7 +33,7 @@ const updateUser = async (req: Request, res: Response) => {
 		if (!user)
 			return res.status(404).json({ message: "Usuario no encontrado" });
 		user.name = name;
-		user.addressLin1 = addressLine1;
+		user.addressLine1 = addressLine1;
 		user.city = city;
 		user.country = country;
 
@@ -47,7 +47,6 @@ const updateUser = async (req: Request, res: Response) => {
 
 const getUser = async (req: Request, res: Response) => {
 	try {
-		console.log("get user");
 		const currentUser = await User.findOne({ _id: req.userId });
 
 		if (!currentUser)

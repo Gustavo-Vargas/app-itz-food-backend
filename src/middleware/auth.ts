@@ -37,9 +37,7 @@ export const jwtParse = async (
 	//		   [    0			  1		   ]
 	// split = ["bearer", "123xeslfdkadkñs"]
 	const token = authorization.split(" ")[1];
-	console.log(authorization);
 	
-    console.log(token)
 	try {
 		// Análizamos el token para validar que sea correcto 
 		// Decoded decodifica el token diviviendolo en partes
