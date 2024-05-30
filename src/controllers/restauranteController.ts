@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, response } from "express";
 import Restaurante from "../models/restauranteModel";
 import cloudinary from "cloudinary";
 import mongoose from "mongoose";
@@ -54,7 +54,7 @@ const updateRestaurante = async (req: Request, res: Response) => {
 		if (!restaurante) {
 			return res.status(404).json({ message: "Restaurante no encontrado" });
 		}
-console.log(req.body);
+		console.log(req.body);
 		restaurante.restauranteName = req.body.restauranteName;
 		restaurante.city = req.body.city;
 		restaurante.country = req.body.country;
@@ -63,7 +63,7 @@ console.log(req.body);
 		restaurante.cuisines = req.body.cuisines;
 		restaurante.menuItems = req.body.menuItems;
 		restaurante.lastUpdated = new Date();
-console.log(req.file)
+		console.log(req.file);
 		if (req.file) {
 			const imageUrl = await uploadImage(req.file as Express.Multer.File);
 			restaurante.imageUrl = imageUrl;
@@ -95,13 +95,103 @@ const uploadImage = async (file: Express.Multer.File) => {
 	const uploadResponse = await cloudinary.v2.uploader.upload(dataUri);
 
 	console.log("termine el uploadImage");
-	
+
 	// Retornamos la url de la imagen en CLoudinary
 	return uploadResponse.url;
+};
+
+const searchRestaurante = async (req: Request, res: Response) => {
+	try {
+		const city = req.params.city;
+		const searchQuery = (req.query.searchQuery as string) || "";
+		const selectedCuisines = (req.query.selectedCuisines as string) || "";
+		const sortOptions = (req.query.sortOptions as string) || "lastUpdated";
+		const page = parseInt(req.query.page as string) || 1;
+
+		let query: any = {};
+
+		// Esta query se va a utilizar para buscar por ciudad
+		// sin diferneciar mayúsculas o minúsculas
+		// zacatecas = Zacatecas
+		query["city"] = new RegExp(city, "i");
+
+		// Obtenemis las ciudaddes en la base de datos
+		const cityCheck = await Restaurante.countDocuments(query);
+
+		if (cityCheck === 0) {
+			return res.status(404).json({
+				data: [],
+				pagination: {
+					total: 0,
+					page: 1,
+					pages: 1,
+				},
+			});
+		}
+
+		// Si existen cocinas en los parámetros de búsqueda
+		// las convertimos del texto a un arreglo
+		if (selectedCuisines) {
+			const cuisinesArray = selectedCuisines
+				.split(",")
+				.map((cuisine) => new RegExp(cuisine, "i"));
+
+			query["cuisines"] = { $all: cuisinesArray };
+		}
+
+		// Por Ejemplo, si en la query tenemos:
+		// restauranteName = AppITZ Food
+		// cuisines = [pizza, pasta, italian]
+		// searchQuery = Pasta
+		// La búsqueda regresaría el restaurante APPITZ FooD,
+		// dado que contiene la palabra pasta en su tipo de cocina
+		if (searchQuery) {
+			const searchRegex = new RegExp(searchQuery, "i");
+			query["$or"] = [
+				{ restauranteName: searchRegex },
+				{ cuisines: { $in: [searchRegex] } },
+			];
+		}
+
+		// tendríamos 10 restaurante por págoma de búsqueda
+		const pageSize = 10;
+
+		// skip sirve para irnos al primer restaurante de cada página,
+		// por ejemplo la página 1, tiene del 0 al 10,
+		// la página 2 del 11 al 19
+		// la página 3 del 20 al 29
+		const skip = (page - 1) * pageSize;
+
+		const restaurants = await Restaurante.find(query)
+			.sort({ [sortOptions]: 1 })
+			.skip(skip)
+			.limit(pageSize)
+			.lean(); // se utiliza para recibir objetos
+
+		const total = await Restaurante.countDocuments(query);
+
+		const response = {
+			data: restaurants,
+			pagination: {
+				total,
+				page,
+				// Por ejemplo, si tenemos 50 resultaods
+				// pageSize=10,
+				// Al dividir 50/10 = 5 páginas
+				pages: Math.ceil(total / pageSize),
+			},
+		};
+		
+		res.json(response);
+	} catch (error) {
+		console.log(error);
+		res.status(500).json({ message: "Error al buscar el restaurante" });
+	}
 };
 
 export default {
 	getRestaurante,
 	createRestaurante,
 	updateRestaurante,
+	searchRestaurante,
 };
