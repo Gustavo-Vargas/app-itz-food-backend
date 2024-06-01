@@ -153,7 +153,7 @@ const searchRestaurante = async (req: Request, res: Response) => {
 			];
 		}
 
-		// tendríamos 10 restaurante por págoma de búsqueda
+		// tendríamos 2 restaurante por págoma de búsqueda
 		const pageSize = 10;
 
 		// skip sirve para irnos al primer restaurante de cada página,
