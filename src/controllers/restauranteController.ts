@@ -181,7 +181,7 @@ const searchRestaurante = async (req: Request, res: Response) => {
 				pages: Math.ceil(total / pageSize),
 			},
 		};
-		
+
 		res.json(response);
 	} catch (error) {
 		console.log(error);
@@ -189,9 +189,30 @@ const searchRestaurante = async (req: Request, res: Response) => {
 	}
 };
 
+// Función para obtener los datos de unr estaurante
+const getRestauranteById = async (req: Request, res: Response) => {
+	try {
+		const restaurantId = req.params.restaurantId;
+		
+		const restaurante = await Restaurante.findById(restaurantId);
+		
+		if (!restaurante) {
+			return res.status(404).json({ message: "Restaurante no encontrado" });
+		}
+		
+		res.json(restaurante);
+	} catch (error) {
+		console.log(error);
+		res
+			.status(500)
+			.json({ message: "Error al obtener los datos del restaurante" });
+	}
+}; // Fin de getRestaurante
+
 export default {
 	getRestaurante,
 	createRestaurante,
 	updateRestaurante,
 	searchRestaurante,
+	getRestauranteById,
 };
